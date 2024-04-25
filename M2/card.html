@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Cart</title>
+        <style>
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+            /* Existing CSS styles... */
+            .order-btn-container {
+                text-align: center;
+                margin-top: 20px;
+            }
+            .order-btn-container button {
+                padding: 10px 20px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 16px;
+            }
+            .order-btn-container button:hover {
+                background-color: #45a049;
+            }
+        </style>    
+    </head>
+    <body>
+        <h1>Cart</h1>
+        <div id="cart-details"></div>
+        <div id="total-price"></div>
+        <div class="order-btn-container">
+            <button id="order-btn">Order Now</button>
+        </div>
+        <script>
+            const cartDetailsElement = document.getElementById('cart-details');
+            const totalPriceElement = document.getElementById('total-price');
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            let selectedItems = [];
+            displayCartDetails();
+            function displayCartDetails() {
+                if (cart.length === 0) {
+                    cartDetailsElement.innerHTML = '<p>No items in the cart</p>';
+                    totalPriceElement.innerHTML = '';
+                } else {
+                    const table = document.createElement('table');
+                    table.innerHTML = `
+                    <tr>
+                        <th>Select</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th>Remove</th>
+                    </tr>
+                `;
+                cart.forEach((item, index) => {
+                    const itemTotal = item.price * item.quantity;
+                    const row = table.insertRow();
+                    row.innerHTML = `
+                    <td><input type="checkbox" onchange="toggleSelection(${index}, this.checked)" ${selectedItems.includes(item) ? 'checked' : ''}></td>
+                    <td>${item.name}</td>
+                    <td>$${item.price.toFixed(2)}</td>
+                    <td>
+                        <input type="number" min="1" value="${item.quantity}" onchange="updateQuantity(${index}, this.value)">
+                    </td>
+                    <td>$${itemTotal.toFixed(2)}</td>
+                    <td><button onclick="removeFromCart(${index})">Remove</button></td>
+                    `;
+                });
+                cartDetailsElement.innerHTML = ''; // Clear previous content
+                cartDetailsElement.appendChild(table);
+                updateTotalPrice();
+            }
+        }
+        function addToCart(index, quantity) {
+            const itemName = document.querySelectorAll('.card-title')[index].textContent;
+            const itemPrice = parseFloat(document.querySelectorAll('.price')[index].dataset.basePrice);
+        
+            // Check if item already exists in the cart
+            const existingItemIndex = cart.findIndex(item => item.name === itemName);
+            if (existingItemIndex !== -1) {
+                // If item exists, update its quantity
+                cart[existingItemIndex].quantity += quantity;
+            } else {
+                // If item does not exist, add it to the cart
+                cart.push({
+                    name: itemName,
+                    price: itemPrice,
+                    quantity: quantity
+                });
+            }
+        
+            // Save the updated cart back to local storage
+            localStorage.setItem('cart', JSON.stringify(cart));
+            displayCartDetails(); // Update the displayed cart details
+            alert("Added to cart!");
+        }
+        function removeFromCart(index) {
+            // Remove the item from the cart array
+            const removedItem = cart.splice(index, 1)[0];
+
+            // Remove the item from the selectedItems array if it exists
+            const itemIndex = selectedItems.findIndex(item => item.name === removedItem.name);
+            if (itemIndex !== -1) {
+                selectedItems.splice(itemIndex, 1);
+            }
+
+            // Save the updated cart back to local storage
+            localStorage.setItem('cart', JSON.stringify(cart));
+
+            // Update the displayed cart details
+            displayCartDetails();
+        }
+        function updateQuantity(index, newQuantity) {
+            // Update the quantity of the item in the cart array
+            cart[index].quantity = parseInt(newQuantity);
+
+            // Save the updated cart back to local storage
+            localStorage.setItem('cart', JSON.stringify(cart));
+
+            // Update the displayed cart details
+            displayCartDetails();
+        }
+        function toggleSelection(index, isSelected) {
+            const item = cart[index];
+            if (isSelected) {
+                selectedItems.push(item);
+            } else {
+                const itemIndex = selectedItems.findIndex(selectedItem => selectedItem.name === item.name);
+                if (itemIndex !== -1) {
+                    selectedItems.splice(itemIndex, 1);
+                }
+            }
+            updateTotalPrice();
+        }
+        function updateTotalPrice() {
+            const totalPrice = selectedItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+            totalPriceElement.innerHTML = `<strong>Total Price: $${totalPrice.toFixed(2)}</strong>`;
+         }
+         const orderBtn = document.getElementById('order-btn');
+         orderBtn.addEventListener('click', function () {
+            localStorage.setItem('selectedItems', JSON.stringify(selectedItems)); // Store all selected items
+            window.location.href = 'order_form.html'; // Redirect to the order form page
+        });
+    </script>
+</body>
+</html>

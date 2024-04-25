@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <!-- Head content -->
+    <style>
+        /* Add your CSS styles here */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+        /* New CSS styles for the contact field */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            cursor: pointer; /* Change cursor to pointer on hover */
+        }
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="tel"],
+        .form-group textarea,
+        .form-group select,
+        .form-group input[type="number"] {
+            width: calc(100% - 22px); /* Adjusted width to account for padding */
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            pointer-events: auto; /* Make the input fields editable */
+            overflow: auto;
+        }
+        .form-group textarea {
+            height: 100px;
+        }
+        .form-group button {
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        .form-group button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Order Food</h2>
+        <form id="orderForm" action="process_order.php" method="POST">
+            <div class="form-group">
+                <label for="foodName">Food Name:</label>
+                <input type="text" id="foodName" name="foodName" readonly>
+            </div>
+            <div class="form-group">
+                <label for="foodPrice">Food Price:</label>
+                <input type="text" id="foodPrice" name="foodPrice" readonly>
+            </div>
+            <div class="form-group">
+                <label for="quantity">Quantity:</label>
+                <input type="text" id="quantity" name="quantity" readonly>
+            </div>
+            <div class="form-group">
+                <label for="totalPrice">Total Price:</label>
+                <input type="text" id="totalPrice" name="totalPrice" readonly>
+            </div>
+            <div class="form-group">
+                <label for="customerName">Customer Name:</label>
+                <input type="text" id="customerName" name="customerName">
+            </div>
+            <div class="form-group">
+                <label for="customerEmail">Customer Email:</label>
+                <input type="email" id="customerEmail" name="customerEmail">
+            </div>
+            <div class="form-group">
+                <label for="customerPhone">Customer Phone:</label>
+                <input type="tel" id="customerPhone" name="customerPhone" >
+            </div>
+            <div class="form-group">
+                <label for="customerAddress">Customer Address:</label>
+                <textarea id="customerAddress" name="customerAddress"></textarea>
+            </div>
+            <div class="form-group">
+                <button type="submit" onclick="saveCustomerInfo()">Order Place</button>
+            </div>
+        </form>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectedItem = JSON.parse(localStorage.getItem('selectedItem'));
+            const customerInfo = JSON.parse(localStorage.getItem('customerInfo'));
+            if (selectedItem) {
+                document.getElementById('foodName').value = selectedItem.name;
+                document.getElementById('foodPrice').value = '$' + selectedItem.price.toFixed(2);
+                document.getElementById('quantity').value = selectedItem.quantity;
+                document.getElementById('total').value = '$' + (selectedItem.price * selectedItem.quantity).toFixed(2);
+                document.getElementById('totalPrice').value = '$' + (selectedItem.price * selectedItem.quantity).toFixed(2);
+            }
+            if (customerInfo) {
+                document.getElementById('customerName').value = customerInfo.name;
+                document.getElementById('customerEmail').value = customerInfo.email;
+                document.getElementById('customerAddress').value = customerInfo.address;
+            }
+
+            // Add click event listeners to labels
+            const labels = document.querySelectorAll('.form-group label');
+            labels.forEach(label => {
+                label.addEventListener('click', () => {
+                    const inputId = label.getAttribute('for');
+                    const inputField = document.getElementById(inputId);
+                    inputField.focus();
+                });
+            });
+        });
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectedItems = JSON.parse(localStorage.getItem('selectedItems')) || [];
+            const customerInfo = JSON.parse(localStorage.getItem('customerInfo')) || {};
+            if (selectedItems.length > 0) {
+                let foodNames = "";
+                let totalPrice = 0;
+                let quantities = "";
+                selectedItems.forEach(item => {
+                    foodNames += item.name + ", ";
+                    totalPrice += item.price * item.quantity;
+                    quantities += item.quantity + ", ";
+                 });
+                 foodNames = foodNames.slice(0, -2); // Remove the last comma and space
+                 quantities = quantities.slice(0, -2);
+                 document.getElementById('foodName').value = foodNames;
+                 document.getElementById('totalPrice').value = '$' + totalPrice.toFixed(2);
+                 document.getElementById('quantity').value = quantities;
+                 const selectedPrices = selectedItems.map(item => '$' + item.price.toFixed(2));
+                 document.getElementById('foodPrice').value = selectedPrices.join(', ');
+                }
+                if (Object.keys(customerInfo).length > 0) {
+                    document.getElementById('customerName').value = customerInfo.name;
+                    document.getElementById('customerEmail').value = customerInfo.email;
+                    document.getElementById('customerAddress').value = customerInfo.address;
+                }
+
+            // Add click event listeners to labels
+            const labels = document.querySelectorAll('.form-group label');
+            labels.forEach(label => {
+                label.addEventListener('click', () => {
+                    const inputId = label.getAttribute('for');
+                    const inputField = document.getElementById(inputId);
+                    inputField.focus();
+                });
+            });
+        });
+        
+        function saveCustomerInfo() {
+            const customerName = document.getElementById('customerName').value;
+            const customerEmail = document.getElementById('customerEmail').value;
+            const customerPhone = document.getElementById('customerPhone').value;
+            const customerAddress = document.getElementById('customerAddress').value;
+            const customerInfo = {
+                name: customerName,
+                email: customerEmail,
+                phone: customerPhone,
+                address: customerAddress
+            };
+            localStorage.setItem('customerInfo', JSON.stringify(customerInfo));
+            alert('Customer information saved successfully!');
+        }
+        
+    </script>
+</body>
+</html>
